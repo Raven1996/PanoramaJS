@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="UTF-8">
+	<title>Panorama Viewer</title>
+	<style type="text/css">
+		html{
+			height: 100%;
+			overflow: hidden;
+		}
+		body{
+			background-color: #202020;
+			height:100%;
+			margin:0;
+			overflow: hidden;
+		}
+		#hint{
+			color: #808080;
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			-webkit-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+			z-index: -1;
+		}
+		#viewer{
+			width: 100%;
+			height: 100%;
+		}
+	</style>
+</head>
+<body>
+	<span id="hint">drag & drop image here!</span>
+	<canvas id="viewer"></canvas>
+</body>
+<script src="src/panorama.js"></script>
+<script>
+	var panorama = null;
+	var type;
+	window.onload = function() {
+		var viewer = document.getElementById('viewer');
+		viewer.width = document.body.clientWidth;
+		viewer.height = document.body.clientHeight;
+		
+		var url = location.search;
+		if (url.indexOf('?') != -1) {
+			document.getElementById('hint').innerText = 'loading...';
+			var str = url.substr(url.indexOf("?")+1);
+			if (str != '') {
+				var img=new Image();
+				img.crossOrigin = 'anonymous';
+				img.src = str;
+				img.onerror = function(e){
+					document.getElementById('hint').innerText = 'Oops, cannot load this image!';
+				}
+				img.onload = function(){
+					document.getElementById('hint').style.display = 'none';
+					if (panorama != null) {
+						panorama.stop();
+					}
+					type = 0;
+					panorama = new Panorama('viewer', this);
+					panorama.start();
+					img = null;
+				}
+			} 
+		}
+		
+		viewer.ondragenter = function(e) {
+			// show something
+			document.body.style.backgroundColor='#404040';
+			return false;
+		}
+		viewer.ondragleave = function(e) {
+			// hide something
+			document.body.style.backgroundColor='#202020';
+			return false;
+		}
+		viewer.ondragover = function(e) {
+			// prevent opening image in firefox
+			return false;
+		}
+		viewer.ondrop = function(e) {
+			// hide something
+			document.body.style.backgroundColor='#202020';
+			e.preventDefault();
+			e.stopPropagation();
+			var file = e.dataTransfer.files[0];
+			//import image;
+			importImg(file)
+			return false;
+		}
+	}
+	
+	window.onresize = function() {
+		var viewer = document.getElementById('viewer');
+		viewer.width = document.body.clientWidth;
+		viewer.height = document.body.clientHeight;
+	}
+	
+	document.onkeydown = function(event) {
+		if(event && event.keyCode==32){  // space
+			if (panorama != null) {
+				type = type==4 ? 0 : type+1;
+				panorama.setType(type);
+			}
+		}
+	}
+	
+	function importImg(file) {
+		var reader = new FileReader()
+		reader.onload = function(event){
+			var img = new Image()
+			img.src = event.target.result
+			img.onload = function(){
+				document.getElementById('hint').style.display = 'none';
+				if (panorama != null) {
+					panorama.stop();
+				}
+				type = 0;
+				panorama = new Panorama('viewer', this);
+				panorama.start();
+				img = null;
+			}
+		}
+		reader.readAsDataURL(file)
+	}
+</script>
+</html>
