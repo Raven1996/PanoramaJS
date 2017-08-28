@@ -103,7 +103,7 @@
 	
 	document.onkeydown = function(event) {
 		if(event && event.keyCode==32){  // space
-			if (panorama != null) {
+			if (panorama) {
 				type = type==4 ? 0 : type+1;
 				panorama.setType(type);
 			}
@@ -117,7 +117,7 @@
 			img.src = event.target.result
 			img.onload = function(){
 				document.getElementById('hint').style.display = 'none';
-				if (panorama != null) {
+				if (panorama) {
 					panorama.stop();
 				}
 				type = 0;

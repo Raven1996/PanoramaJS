@@ -62,9 +62,13 @@ function Panorama(viewerId, img) {
 	var beta = 0;  // y rotate
 	var speedA = 0;  // alpha speed
 	var speedB = 0;  // beta speed
-	var mouseCtrl = false;  // if mouse is down
-	var lastx = 0, lasty = 0, nowx = 0, nowy = 0;  // mouse movement
+	var hold = false;  // mouse down or touch
+	var lastx = 0, lasty = 0, nowx = 0, nowy = 0;  // position
 	var time = 0;  // timestamp
+	
+	var oldmousedown;
+	var oldmousemove;
+	var oldmouseup;
 	
 	function webglInit() {
 		gl = myCanvas.getContext('webgl');
@@ -120,7 +124,7 @@ function Panorama(viewerId, img) {
 		gl.uniform1f(myObj.ratioy, myCanvas.height/diag);
 		var dt = (timestamp-time) * 0.001;
 		time = timestamp;
-		if (mouseCtrl) {
+		if (hold) {
 			beta += speedB = (lastx-nowx)/diag*3.141593;
 			alpha += speedA = (nowy-lasty)/diag*3.141593;
 			speedA /= dt;
@@ -168,21 +172,27 @@ function Panorama(viewerId, img) {
 		myObj.texture = gl.getUniformLocation(programObject, "inputImageTexture");
 		myObj.type = gl.getUniformLocation(programObject, "type");
 		myObj.animation = requestAnimationFrame(draw);
+		oldmousedown = myCanvas.onmousedown;
+		oldmousemove = document.oldmousemove;
+		oldmouseup = document.oldmouseup;
 		myCanvas.onmousedown = function(e) {
+			if (oldmousedown) oldmousedown(e);
 			if (e.button == 0) {
-				mouseCtrl = true;
+				hold = true;
 				nowx = lastx = e.clientX;
 				nowy = lasty = e.clientY;
 			}
 		}
 		document.onmousemove = function(e) {
-			if (mouseCtrl) {
+			if (oldmousemove) oldmousemove(e);
+			if (hold) {
 				nowx = e.clientX;
 				nowy = e.clientY;
 			}
 		}
 		document.onmouseup = function(e) {
-			if (e.button == 0) mouseCtrl = false;
+			if (oldmouseup) oldmouseup(e);
+			if (e.button == 0) hold = false;
 		}
 	}
 	
@@ -192,9 +202,9 @@ function Panorama(viewerId, img) {
 	}
 	my.stop = function() {
 		cancelAnimationFrame(myObj.animation);
-		myCanvas.onmousedown = null;
-		document.onmousemove = null;
-		document.onmouseup = null;
+		myCanvas.onmousedown = oldmousedown;
+		document.onmousemove = oldmousemove;
+		document.onmouseup = oldmouseup;
 		gl.finish;
 	}
 	my.setType = function(num){
