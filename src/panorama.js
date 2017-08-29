@@ -9,45 +9,45 @@ function Panorama(viewerId, img) {
 	var vsh =
 		'precision mediump float;\n' +
 		'attribute vec4 position;\n' +
-		'varying vec2 textureCoordinate;\n' +
+		'varying vec2 screenCoordinate;\n' +
+		'uniform float ratiox;\n' +
+		'uniform float ratioy;\n' +
 		'void main() {\n' +
 		'    gl_Position = position;\n' +
-		'    textureCoordinate =  position.xy;\n' +
+		'    screenCoordinate =  vec2(position.x*ratiox, position.y*ratioy);\n' +
 		'}';
 	var fsh =
 		'precision mediump float;\n' +
-		'varying vec2 textureCoordinate;\n' +
+		'varying vec2 screenCoordinate;\n' +
 		'uniform sampler2D inputImageTexture;\n' +
-		'uniform float ratiox;\n' +
-		'uniform float ratioy;\n' +
 		'uniform mat3 rot;\n' +
 		'uniform int type;\n' +
 		'void main() {\n' +
-		'    float x = textureCoordinate.x * ratiox;\n' +
-		'    float y = textureCoordinate.y * ratioy;\n' +
-		'    vec2 l = vec2(x, y);\n' +
-		'    vec2 d = normalize(l);\n' +
+		'    vec2 d = screenCoordinate.yx;\n' +
+		'    vec2 n = normalize(d);\n' +
+		'    float l = length(d);\n' +
+		'    float lq = l * l;\n' +
 		'    vec3 v;\n' +		
-		'    if (type == 0) v = rot * vec3(0.7265425, y, x);\n' +
+		'    if (type == 0) v = rot * vec3(0.7265425, d);\n' +
 		'    else if (type == 1) {\n' +
-		'        float n = 1.0-2.0*y*y-2.0*x*x;\n' +
-		'        if (n < 0.0) discard;\n' +
-		'        v = rot * vec3(sqrt(n) , 1.414214*y, 1.414214*x);\n' +
+		'        float m = 1.0 - 2.0*lq;\n' +
+		'        if (m < 0.0) discard;\n' +
+		'        v = rot * vec3(sqrt(m)*0.7071078, d);\n' +
 		'    }\n' +
 		'    else if (type == 2) {\n' +
-		'        float theta = 2.0 * asin(length(vec2(y, x))/1.000001);\n' +
-		'        v = rot * vec3(cos(theta), d.y*sin(theta), d.x*sin(theta));\n' +
+		'        float lb = l * sqrt(1.0-lq);\n' +
+		'        v = rot * vec3(0.5-lq, n*lb);\n' +
 		'    }\n' +
 		'    else if (type == 3) {\n' +
-		'        float theta = length(l)*3.141593;\n' +
-		'        v = rot * vec3(cos(theta), d.y*sin(theta), d.x*sin(theta));\n' +
+		'        float theta = l * 3.141593;\n' +
+		'        v = rot * vec3(cos(theta), n*sin(theta));\n' +
 		'    }\n' +
 		'    else if (type == 4) {\n' +
-		'        float theta = 2.0 * atan(length(vec2(y, x)), 0.5);\n' +
-		'        v = rot * vec3(cos(theta), d.y*sin(theta), d.x*sin(theta));\n' +
+		'        vec3 p = vec3(0.5, d) / (lq+0.25);\n' +
+		'        v = rot * (p-vec3(1.0, 0.0, 0.0));\n' +
 		'    }\n' +
 		'    else discard;\n' +
-		'    vec2 coord = vec2(atan(v.z, v.x)*0.1591549+0.5, -atan(v.y, length(vec2(v.z, v.x)))*0.3183099+0.5);\n' +
+		'    vec2 coord = vec2(atan(v.z, v.x)*0.1591549+0.5, -atan(v.y, length(v.zx))*0.3183099+0.5);\n' +
 		'    gl_FragColor = texture2D(inputImageTexture, coord);\n' +
 		'}';
 	var myObj = {};
@@ -65,6 +65,7 @@ function Panorama(viewerId, img) {
 	var hold = false;  // mouse down or touch
 	var lastx = 0, lasty = 0, nowx = 0, nowy = 0;  // position
 	var time = 0;  // timestamp
+	var idt;  //touch identifier
 	
 	var oldmousedown;
 	var oldmousemove;
@@ -194,6 +195,45 @@ function Panorama(viewerId, img) {
 			if (oldmouseup) oldmouseup(e);
 			if (e.button == 0) hold = false;
 		}
+		viewer.addEventListener('touchstart', ontouch, false);
+		document.addEventListener('touchmove', ontouch, false);
+		document.addEventListener('touchend', ontouch, false);
+	}
+	
+	function ontouch (event){  
+		var e = event || window.event;
+		switch (e.type) {
+		case 'touchstart':
+			if (e.touches.length==1) {
+				hold = true;
+				var touch = e.touches[0]
+				nowx = lastx = touch.clientX;
+				nowy = lasty = touch.clientY;
+				idt = touch.identifier;
+			}
+			break;
+		case 'touchmove':
+			if (hold) {
+				var touches = e.changedTouches;
+				for (var i=0; i<touches.length; i++) {
+					if (touches[i].identifier == idt) {
+						nowx = touches[i].clientX;
+						nowy = touches[i].clientY;
+					}
+				}
+			}
+			break;
+		case 'touchend':
+			if (hold && e.touches.length==0) {
+				var touches = e.changedTouches;
+				for (var i=0; i<touches.length; i++){
+					if (touches[i].identifier == idt) {
+						hold = false;
+					}
+				}
+			}
+			break;
+		}
 	}
 	
 	var my = {};
@@ -205,6 +245,9 @@ function Panorama(viewerId, img) {
 		myCanvas.onmousedown = oldmousedown;
 		document.onmousemove = oldmousemove;
 		document.onmouseup = oldmouseup;
+		viewer.removeEventListener('touchstart', ontouch, false);
+		document.removeEventListener('touchmove', ontouch, false);
+		document.removeEventListener('touchend', ontouch, false);
 		gl.finish;
 	}
 	my.setType = function(num){

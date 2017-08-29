@@ -51,24 +51,25 @@
 			var str = url.substr(url.indexOf("?")+1);
 			if (str != '') {
 				var img=new Image();
-				img.crossOrigin = 'anonymous';
+				img.crossOrigin = '';
 				img.src = str;
 				img.onerror = function(e){
 					document.getElementById('hint').innerText = 'Oops, cannot load this image!';
 				}
-				img.onload = function(){
-					document.getElementById('hint').style.display = 'none';
-					if (panorama != null) {
-						panorama.stop();
-					}
-					type = 0;
-					panorama = new Panorama('viewer', this);
-					panorama.start();
-					img = null;
-				}
+				img.onload = imgOnload;
 			} 
 		}
 		
+		viewer.addEventListener('touchstart', touch, false);
+		document.addEventListener('touchmove', touch, false);
+		document.addEventListener('touchend', touch, false);
+		function touch (event){  
+			var e = event || window.event;
+			if (e.type=="touchstart" && panorama && e.touches.length==2){  
+					type = type==4 ? 0 : type+1;
+					panorama.setType(type);
+			}
+		}
 		viewer.ondragenter = function(e) {
 			// show something
 			document.body.style.backgroundColor='#404040';
@@ -115,18 +116,20 @@
 		reader.onload = function(event){
 			var img = new Image()
 			img.src = event.target.result
-			img.onload = function(){
-				document.getElementById('hint').style.display = 'none';
-				if (panorama) {
-					panorama.stop();
-				}
-				type = 0;
-				panorama = new Panorama('viewer', this);
-				panorama.start();
-				img = null;
-			}
+			img.onload = imgOnload;
 		}
 		reader.readAsDataURL(file)
+	}
+	
+	function imgOnload(){
+		document.getElementById('hint').style.display = 'none';
+		if (panorama) {
+			panorama.stop();
+		}
+		type = 0;
+		panorama = new Panorama('viewer', this);
+		panorama.start();
+		img = null;
 	}
 </script>
 </html>
