@@ -24,8 +24,9 @@ function Panorama(viewerId, img) {
 		'uniform int type;\n' +
 		'void main() {\n' +
 		'    vec2 d = screenCoordinate.yx;\n' +
-		'    vec2 n = normalize(d);\n' +
 		'    float l = length(d);\n' +
+		'    vec2 n = d;\n' + 
+		'    if (l > 0.0) n = normalize(d);\n' +
 		'    float lq = l * l;\n' +
 		'    vec3 v;\n' +		
 		'    if (type == 0) v = rot * vec3(0.7265425, d);\n' +
@@ -36,11 +37,13 @@ function Panorama(viewerId, img) {
 		'    }\n' +
 		'    else if (type == 2) {\n' +
 		'        float lb = l * sqrt(1.0-lq);\n' +
-		'        v = rot * vec3(0.5-lq, n*lb);\n' +
+		'        if (l > 0.0) v = rot * vec3(0.5-lq, n*lb);\n' +
+		'        else v = rot * vec3(0.5, n);\n' +
 		'    }\n' +
 		'    else if (type == 3) {\n' +
 		'        float theta = l * 3.141593;\n' +
-		'        v = rot * vec3(cos(theta), n*sin(theta));\n' +
+		'        if (l > 0.0) v = rot * vec3(cos(theta), n*sin(theta));\n' +
+		'        else v = rot * vec3(0.3183099, n);\n' +
 		'    }\n' +
 		'    else if (type == 4) {\n' +
 		'        vec3 p = vec3(0.5, d) / (lq+0.25);\n' +
@@ -200,7 +203,7 @@ function Panorama(viewerId, img) {
 		document.addEventListener('touchend', ontouch, false);
 	}
 	
-	function ontouch (event){  
+	function ontouch (event){
 		var e = event || window.event;
 		switch (e.type) {
 		case 'touchstart':
@@ -224,7 +227,7 @@ function Panorama(viewerId, img) {
 			}
 			break;
 		case 'touchend':
-			if (hold && e.touches.length==0) {
+			if (hold) {
 				var touches = e.changedTouches;
 				for (var i=0; i<touches.length; i++){
 					if (touches[i].identifier == idt) {
