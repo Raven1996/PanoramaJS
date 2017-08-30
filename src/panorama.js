@@ -25,28 +25,27 @@ function Panorama(viewerId, img) {
 		'void main() {\n' +
 		'    vec2 d = screenCoordinate.yx;\n' +
 		'    float l = length(d);\n' +
-		'    vec2 n = d;\n' + 
-		'    if (l > 0.0) n = normalize(d);\n' +
+		'    vec2 n = normalize(d);\n' +
 		'    float lq = l * l;\n' +
 		'    vec3 v;\n' +		
-		'    if (type == 0) v = rot * vec3(0.7265425, d);\n' +
+		'    if (type == 0) v = rot * vec3(1.0, d*1.376382);\n' +
 		'    else if (type == 1) {\n' +
-		'        float m = 1.0 - 2.0*lq;\n' +
+		'        float m = 1.0 - 2.0 * lq;\n' +
 		'        if (m < 0.0) discard;\n' +
-		'        v = rot * vec3(sqrt(m)*0.7071078, d);\n' +
+		'        v = rot * vec3(sqrt(m), d*1.414214);\n' +
 		'    }\n' +
 		'    else if (type == 2) {\n' +
-		'        float lb = l * sqrt(1.0-lq);\n' +
-		'        if (l > 0.0) v = rot * vec3(0.5-lq, n*lb);\n' +
-		'        else v = rot * vec3(0.5, n);\n' +
+		'        float lb = sqrt(1.0-lq) * l * 2.0;\n' +
+		'        if (l > 0.0) v = rot * vec3(1.0-2.0*lq, n*lb);\n' +
+		'        else v = rot * vec3(1.0, d*2.0);\n' +
 		'    }\n' +
 		'    else if (type == 3) {\n' +
 		'        float theta = l * 3.141593;\n' +
 		'        if (l > 0.0) v = rot * vec3(cos(theta), n*sin(theta));\n' +
-		'        else v = rot * vec3(0.3183099, n);\n' +
+		'        else v = rot * vec3(1.0, d*3.141593);\n' +
 		'    }\n' +
 		'    else if (type == 4) {\n' +
-		'        vec3 p = vec3(0.5, d) / (lq+0.25);\n' +
+		'        vec3 p = vec3(0.5, d) / (lq + 0.25);\n' +
 		'        v = rot * (p-vec3(1.0, 0.0, 0.0));\n' +
 		'    }\n' +
 		'    else discard;\n' +
