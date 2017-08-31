@@ -5,7 +5,6 @@ function Panorama(viewerId, img) {
 	var fragmentShaderObject = null;
 	var programObject;
 	var v4PositionIndex;
-	var texObj;
 	var vsh =
 		'precision mediump float;\n' +
 		'attribute vec4 position;\n' +
@@ -19,7 +18,7 @@ function Panorama(viewerId, img) {
 	var fsh =
 		'precision mediump float;\n' +
 		'varying vec2 screenCoordinate;\n' +
-		'uniform sampler2D inputImageTexture;\n' +
+		'uniform sampler2D imageTexture;\n' +
 		'uniform mat3 rot;\n' +
 		'uniform int type;\n' +
 		'void main() {\n' +
@@ -40,8 +39,8 @@ function Panorama(viewerId, img) {
 		'        else v = rot * vec3(1.0, d*2.0);\n' +
 		'    }\n' +
 		'    else if (type == 3) {\n' +
-		'        float theta = l * 3.141593;\n' +
-		'        if (l > 0.0) v = rot * vec3(cos(theta), n*sin(theta));\n' +
+		'        float t = l * 3.141593;\n' +
+		'        if (l > 0.0) v = rot * vec3(cos(t), n*sin(t));\n' +
 		'        else v = rot * vec3(1.0, d*3.141593);\n' +
 		'    }\n' +
 		'    else if (type == 4) {\n' +
@@ -50,14 +49,14 @@ function Panorama(viewerId, img) {
 		'    }\n' +
 		'    else discard;\n' +
 		'    vec2 coord = vec2(atan(v.z, v.x)*0.1591549+0.5, -atan(v.y, length(v.zx))*0.3183099+0.5);\n' +
-		'    gl_FragColor = texture2D(inputImageTexture, coord);\n' +
+		'    gl_FragColor = texture2D(imageTexture, coord);\n' +
 		'}';
 	var myObj = {};
 	
 	webglInit();
 	shaderInit(vsh, fsh);
 	programInit();
-	texObj = createTexture(img);
+	createTexture(img);
 	
 	var type = 0;  // 0:108° rectilinear 1:180° orthographic 2:360° equisolid angle 3:360° equidistant 4:254° stereographic
 	var alpha = 0;  // z rotate
@@ -117,7 +116,6 @@ function Panorama(viewerId, img) {
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-		return textureObject;
 	}
 	
 	function draw(timestamp) {
@@ -172,7 +170,7 @@ function Panorama(viewerId, img) {
 		myObj.ratiox = gl.getUniformLocation(programObject, "ratiox");
 		myObj.ratioy = gl.getUniformLocation(programObject, "ratioy");
 		myObj.matrix = gl.getUniformLocation(programObject, "rot");
-		myObj.texture = gl.getUniformLocation(programObject, "inputImageTexture");
+		myObj.texture = gl.getUniformLocation(programObject, "imageTexture");
 		myObj.type = gl.getUniformLocation(programObject, "type");
 		myObj.animation = requestAnimationFrame(draw);
 		oldmousedown = myCanvas.onmousedown;
