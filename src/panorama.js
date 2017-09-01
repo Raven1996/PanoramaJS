@@ -136,7 +136,7 @@ function Panorama(viewerId, img) {
 				alpha += speedA * dt;
 				speedA *= Math.exp(-5*dt);
 				beta += speedB * dt;
-				speedB *= Math.exp(-5*dt);
+				speedB = speedB==0 ? 0 : speedB>0 ? 0.105+(speedB-0.105)*Math.exp(-5*dt) : -0.105+(speedB+0.105)*Math.exp(-5*dt);
 		}
 		alpha = alpha>1.570796 ? 1.570796 : alpha<-1.570796 ? -1.570796 : alpha;
 		beta = beta>6.283185 ? beta-6.283185 : beta<0 ? beta+6.283185 : beta;
