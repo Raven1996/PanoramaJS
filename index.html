@@ -56,7 +56,7 @@
 			document.getElementById('hint').innerText = 'loading...';
 			var str = url.substr(url.indexOf("?")+1);
 			if (str != '') {
-				var img=new Image();
+				var img = new Image();
 				img.crossOrigin = '';
 				img.src = str;
 				img.onerror = function(e){
@@ -127,7 +127,7 @@
 		reader.readAsDataURL(file)
 	}
 	
-	function imgOnload(){
+	function imgOnload() {
 		document.getElementById('hint').style.display = 'none';
 		if (panorama) {
 			panorama.stop();

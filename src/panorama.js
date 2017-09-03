@@ -66,7 +66,7 @@ function Panorama(viewerId, img) {
 	var hold = false;  // mouse down or touch
 	var lastx = 0, lasty = 0, nowx = 0, nowy = 0;  // position
 	var time = 0;  // timestamp
-	var idt;  //touch identifier
+	var idt;  // touch identifier
 	
 	var oldmousedown;
 	var oldmousemove;
