@@ -1,9 +1,9 @@
 function Panorama(viewerId, img) {
 	var gl = null;
 	var myCanvas = document.getElementById(viewerId);
-	var vertexShaderObject;
+	var vertexShaderObject = null;
 	var fragmentShaderObject = null;
-	var programObject;
+	var programObject = null;
 	var v4PositionIndex;
 	var vsh =
 		'precision mediump float;\n' +
@@ -248,7 +248,7 @@ function Panorama(viewerId, img) {
 		viewer.removeEventListener('touchstart', ontouch, false);
 		document.removeEventListener('touchmove', ontouch, false);
 		document.removeEventListener('touchend', ontouch, false);
-		gl.finish;
+		gl.disableVertexAttribArray(v4PositionIndex);
 	}
 	my.setType = function(num){
 		type = num;
